@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 地球 (国内镜像加速版)</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        .label {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: #4da6ff;
+            font-family: "Microsoft YaHei", sans-serif;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 8px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="label">
+        <h1>3D 交互地球仪</h1>
+        <p>国内镜像加速版 | 拖动旋转</p>
+    </div>
+    <div id="canvas-container"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.zhimg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.zhimg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // 场景与渲染器
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 4;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // 光源
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        sunLight.position.set(5, 3, 5);
+        scene.add(sunLight);
+
+        // 纹理加载 (同样使用了国内加速的图片源)
+        const loader = new THREE.TextureLoader();
+        const baseImgUrl = 'https://code.aliyun.com/kar98k/p_w_picpath/raw/master/threejs/'; 
+        
+        // 纹理：使用更稳定的源
+        const earthTexture = loader.load('https://unpkg.zhimg.com/threejs-earth@1.0.4/src/img/earth_blue_4k.jpg');
+        const cloudTexture = loader.load('https://unpkg.zhimg.com/threejs-earth@1.0.4/src/img/earth_clouds_4k.png');
+
+        // 地球主体
+        const earth = new THREE.Mesh(
+            new THREE.SphereGeometry(1, 64, 64),
+            new THREE.MeshPhongMaterial({ map: earthTexture, shininess: 5 })
+        );
+        scene.add(earth);
+
+        // 云层
+        const clouds = new THREE.Mesh(
+            new THREE.SphereGeometry(1.015, 64, 64),
+            new THREE.MeshPhongMaterial({ map: cloudTexture, transparent: true, opacity: 0.5 })
+        );
+        scene.add(clouds);
+
+        // 星空背景
+        const createStars = () => {
+            const geom = new THREE.BufferGeometry();
+            const positions = new Float32Array(3000 * 3);
+            for(let i=0; i<9000; i++) positions[i] = (Math.random() - 0.5) * 100;
+            geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            return new THREE.Points(geom, new THREE.PointsMaterial({color: 0xaaaaaa, size: 0.1}));
+        };
+        scene.add(createStars());
+
+        // 控制器
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // 渲染循环
+        function animate() {
+            requestAnimationFrame(animate);
+            earth.rotation.y += 0.0015;
+            clouds.rotation.y

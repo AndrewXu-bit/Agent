@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 粒子球体交互</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* 隐藏滚动条 */
+            background-color: #050505;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: #ffffff;
+            pointer-events: none; /* 让鼠标穿透文字 */
+            text-shadow: 0 0 10px rgba(0,255,255,0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="info">
+        <h1>3D 粒子星云</h1>
+        <p>按住左键旋转 | 滚轮缩放</p>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- 1. 场景设置 ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // --- 2. 创建 3D 粒子 ---
+        const particlesGeometry = new THREE.BufferGeometry();
+        const count = 15000; // 粒子数量
+
+        const positions = new Float32Array(count * 3); // 每个粒子有 x, y, z
+        const colors = new Float32Array(count * 3);
+
+        for (let i = 0; i < count * 3; i++) {
+            // 生成球体分布的随机坐标
+            positions[i] = (Math.random() - 0.5) * 10;
+            colors[i] = Math.random(); // 随机颜色 RGB
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        // 粒子材质
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.015,
+            vertexColors: true, // 使用顶点颜色
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending // 叠加模式让发光感更强
+        });
+
+        const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particleSystem);
+
+        // --- 3. 交互控制器 ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // 开启阻尼感（丝滑感）
+
+        // --- 4. 动画循环 ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 让球体缓慢自转
+            particleSystem.rotation.y += 0.001;
+            particleSystem.rotation.x += 0.0005;
+
+            controls.update(); // 必须在动画循环中更新
+            renderer.render(scene, camera);
+        }
+
+        // --- 5. 窗口自适应 ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

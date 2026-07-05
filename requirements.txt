@@ -1,0 +1,26 @@
+# Agent Framework 依赖
+pydantic>=2.0.0
+httpx>=0.24.0
+PyYAML>=6.0
+
+# 飞书机器人依赖
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# RAG 知识库依赖
+llama-index>=0.10.0
+llama-index-vector-stores-chroma>=0.1.0
+chromadb>=0.4.0
+unstructured>=0.10.0
+unstructured[pdf]>=0.10.0  # PDF 支持
+FlagEmbedding>=1.2.0
+torch>=2.0.0
+sentence-transformers>=2.2.0
+rank-bm25>=0.2.2
+
+# MCP 协议支持（可选）
+# mcp>=1.0.0
+
+# 开发工具
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0
